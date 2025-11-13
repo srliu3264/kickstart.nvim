@@ -205,13 +205,36 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
+-- TODO: the following deals with molten.
+-- for ipynb molten keybindings
+vim.keymap.set('n', '<localleader>ip', function()
+  local venv = os.getenv 'VIRTUAL_ENV' or os.getenv 'CONDA_PREFIX'
+  if venv ~= nil then
+    -- in the form of /home/benlubas/.virtualenvs/VENV_NAME
+    venv = string.match(venv, '/.+/(.+)')
+    vim.cmd(('MoltenInit %s'):format(venv))
+  else
+    vim.cmd 'MoltenInit python3'
+  end
+end, { desc = 'Initialize Molten for python3', silent = true })
+
+vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
+vim.keymap.set('n', '<localleader>os', ':noautocmd MoltenEnterOutput<CR>', { desc = 'open output window', silent = true })
+
+vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>', { desc = 're-eval cell', silent = true })
+vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv', { desc = 'execute visual selection', silent = true })
+vim.keymap.set('n', '<localleader>oh', ':MoltenHideOutput<CR>', { desc = 'close output window', silent = true })
+vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>', { desc = 'delete Molten cell', silent = true })
+
+-- if you work with html outputs:
+vim.keymap.set('n', '<localleader>mx', ':MoltenOpenInBrowser<CR>', { desc = 'open output in browser', silent = true })
 -- for ipynb
 
 vim.g.python3_host_prog = vim.fn.expand '~/.virtualenvs/nvim/bin/python3'
 
 -- I find auto open annoying, keep in mind setting this option will require setting
 -- a keybind for `:noautocmd MoltenEnterOutput` to open the output again
-vim.g.molten_auto_open_output = false
+vim.g.molten_auto_open_output = true
 
 -- this guide will be using image.nvim
 -- Don't forget to setup and install the plugin if you want to view image outputs
@@ -941,7 +964,18 @@ require('lazy').setup({
   },
 
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      signs = false,
+      highlight = {
+        keyword = 'wide', -- <<< THIS FIXES IT
+        after = 'fg',
+      },
+    },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
