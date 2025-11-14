@@ -206,7 +206,6 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 -- NOTE: molten ipykernel setups:
--- TODO: lsr: make ctrl+b/a creating new py cells. py convert, save outputs.
 -- WARN: Make sure the virtual enviroment is created in the folder, and source.virtualenvs, and make sure pip install ipykernel, and register it python -m ipykernel install --user --name VENV_NAME
 vim.keymap.set('n', '<localleader>ip', function()
   local venv = os.getenv 'VIRTUAL_ENV' or os.getenv 'CONDA_PREFIX'
@@ -239,6 +238,32 @@ vim.keymap.set('n', '<localleader>ml', ':MoltenLoad<CR>', { desc = '[M]olten: [L
 vim.keymap.set('n', '<localleader>mx', ':MoltenOpenInBrowser<CR>', { desc = 'open output in browser', silent = true })
 vim.keymap.set('n', '<localleader>mn', ':MoltenNext<CR>', { desc = 'jump to next cell', silent = true })
 vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to previous cell', silent = true })
+-- set ctrl+b to create a python cell below current cell.
+-- TODO: in tmux, ctrl+b is binded to command. So in tmux, need to type ctrl+b, ctrl+b to work. Moreover, this only works when cursor is at the bottom of current cell. Maybe fix it later.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'quarto', 'markdown', 'python' },
+  callback = function()
+    vim.keymap.set('n', '<C-b>', function()
+      local api = vim.api
+      local row = api.nvim_win_get_cursor(0)[1]
+
+      local cell = {
+        '```python',
+        '',
+        '```',
+        '',
+      }
+
+      api.nvim_buf_set_lines(0, row, row, false, cell)
+      api.nvim_win_set_cursor(0, { row + 2, 0 })
+    end, {
+      buffer = true,
+      silent = true,
+      desc = 'Insert python cell below',
+    })
+  end,
+})
+
 -- NOTE: options for molten
 vim.g.python3_host_prog = vim.fn.expand '~/.virtualenvs/nvim/bin/python3'
 -- I find auto open annoying, keep in mind setting this option will require setting
