@@ -206,8 +206,8 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 -- NOTE: molten ipykernel setups:
--- for molten keybindings
--- TODO: lsr: make ctrl+b/a creating new py cells. double check ipynb saving, py convert, image rendering, output zip.
+-- TODO: lsr: make ctrl+b/a creating new py cells. py convert, save outputs.
+-- WARN: Make sure the virtual enviroment is created in the folder, and source.virtualenvs, and make sure pip install ipykernel, and register it python -m ipykernel install --user --name VENV_NAME
 vim.keymap.set('n', '<localleader>ip', function()
   local venv = os.getenv 'VIRTUAL_ENV' or os.getenv 'CONDA_PREFIX'
   if venv ~= nil then
@@ -218,14 +218,22 @@ vim.keymap.set('n', '<localleader>ip', function()
     vim.cmd 'MoltenInit python3'
   end
 end, { desc = 'Initialize Molten for python3', silent = true })
--- WARN: Make sure the virtual enviroment is created in the folder, and source.virtualenvs, and make sure pip install ipykernel, and register it python -m ipykernel install --user --name VENV_NAME
-vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
-vim.keymap.set('n', '<localleader>os', ':noautocmd MoltenEnterOutput<CR>', { desc = 'open output window', silent = true })
 
-vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>', { desc = 're-eval cell', silent = true })
 vim.keymap.set('v', '<localleader>r', ':<C-u>MoltenEvaluateVisual<CR>gv', { desc = 'execute visual selection', silent = true })
-vim.keymap.set('n', '<localleader>oh', ':MoltenHideOutput<CR>', { desc = 'close output window', silent = true })
-vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>', { desc = 'delete Molten cell', silent = true })
+vim.keymap.set('n', '<localleader>rs', ':MoltenInterrupt<CR>', { desc = 'interrup kernel, stop running code', silent = true })
+vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>', { desc = 're-eval cell', silent = true })
+
+vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
+
+vim.keymap.set('n', '<localleader>mow', ':noautocmd MoltenEnterOutput<CR>', { desc = '[Molten]: [O]pen output [W]indow', silent = true })
+vim.keymap.set('n', '<localleader>mcw', ':MoltenHideOutput<CR>', { desc = '[M]olten:[C]lose output [W]indow', silent = true })
+vim.keymap.set('n', '<localleader>moi', ':MoltenImagePopup<CR>', { desc = '[M]olten: [O]pen output [I]mage via defualt image viewer' })
+vim.keymap.set('n', '<localleader>ms', ':MoltenSave<CR>', { desc = '[M]olten: [S]ave the current cells and evaluated outputs into a JSON file. ' })
+-- Save the current cells and evaluated outputs into a JSON file. When path is specified, save the file to path, otherwise save to g:molten_save_path. currently only saves one kernel per file
+vim.keymap.set('n', '<localleader>ml', ':MoltenLoad<CR>', { desc = '[M]olten: [L]oad the cell locations and outputs from a JSON file.' })
+-- NOTE:There are keymaps in ~/.config/nvim/lua/custom/plugins/quarto.lua. In particular, the following md is repeated in quarto.lua, and hence commented.
+--
+-- vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>', { desc = 'delete Molten cell', silent = true })
 
 -- if you work with html outputs:
 vim.keymap.set('n', '<localleader>mx', ':MoltenOpenInBrowser<CR>', { desc = 'open output in browser', silent = true })
@@ -234,10 +242,7 @@ vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to prev
 -- NOTE: options for molten
 vim.g.python3_host_prog = vim.fn.expand '~/.virtualenvs/nvim/bin/python3'
 -- I find auto open annoying, keep in mind setting this option will require setting
--- a keybind for `:noautocmd MoltenEnterOutput` to open the output again
 vim.g.molten_auto_open_output = false
--- this guide will be using image.nvim
--- Don't forget to setup and install the plugin if you want to view image outputs
 vim.g.molten_image_provider = 'image.nvim'
 -- optional, I like wrapping. works for virt text and the output window
 vim.g.molten_wrap_output = true
@@ -246,6 +251,11 @@ vim.g.molten_wrap_output = true
 vim.g.molten_virt_text_output = true
 -- this will make it so the output shows up below the \`\`\` cell delimiter
 vim.g.molten_virt_lines_off_by_1 = true
+-- vim.g.molten_auto_image_popup = true
+-- vim.g.molten_auto_open_html_in_browser = true
+
+-- -- Where images will be displayed, either the floating window only, virtual text output only, or both. "virt" requires molten_virt_text_output = true. Other option: "float","virt"
+-- vim.g.molten_image_location = "both"
 
 -- NOTE:nvim name.ipynb to create a new ipynb will not render ipynb properly via Jupytext.
 -- Provide a command to create a blank new Python notebook
