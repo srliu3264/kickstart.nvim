@@ -205,19 +205,20 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
--- TODO: the following deals with molten.
--- for ipynb molten keybindings
+-- NOTE: molten ipykernel setups:
+-- for molten keybindings
+-- TODO: lsr: make ctrl+b/a creating new py cells. double check ipynb saving, py convert, image rendering, output zip.
 vim.keymap.set('n', '<localleader>ip', function()
   local venv = os.getenv 'VIRTUAL_ENV' or os.getenv 'CONDA_PREFIX'
   if venv ~= nil then
-    -- in the form of /home/benlubas/.virtualenvs/VENV_NAME
+    -- in the form of /home/srliu/.virtualenvs/VENV_NAME
     venv = string.match(venv, '/.+/(.+)')
     vim.cmd(('MoltenInit %s'):format(venv))
   else
     vim.cmd 'MoltenInit python3'
   end
 end, { desc = 'Initialize Molten for python3', silent = true })
-
+-- WARN: Make sure the virtual enviroment is created in the folder, and source.virtualenvs, and make sure pip install ipykernel, and register it python -m ipykernel install --user --name VENV_NAME
 vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
 vim.keymap.set('n', '<localleader>os', ':noautocmd MoltenEnterOutput<CR>', { desc = 'open output window', silent = true })
 
@@ -228,27 +229,79 @@ vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>', { desc = 'delete Mol
 
 -- if you work with html outputs:
 vim.keymap.set('n', '<localleader>mx', ':MoltenOpenInBrowser<CR>', { desc = 'open output in browser', silent = true })
--- for ipynb
-
+vim.keymap.set('n', '<localleader>mn', ':MoltenNext<CR>', { desc = 'jump to next cell', silent = true })
+vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to previous cell', silent = true })
+-- NOTE: options for molten
 vim.g.python3_host_prog = vim.fn.expand '~/.virtualenvs/nvim/bin/python3'
-
 -- I find auto open annoying, keep in mind setting this option will require setting
 -- a keybind for `:noautocmd MoltenEnterOutput` to open the output again
-vim.g.molten_auto_open_output = true
-
+vim.g.molten_auto_open_output = false
 -- this guide will be using image.nvim
 -- Don't forget to setup and install the plugin if you want to view image outputs
 vim.g.molten_image_provider = 'image.nvim'
-
 -- optional, I like wrapping. works for virt text and the output window
 vim.g.molten_wrap_output = true
-
 -- Output as virtual text. Allows outputs to always be shown, works with images, but can
 -- be buggy with longer images
 vim.g.molten_virt_text_output = true
-
 -- this will make it so the output shows up below the \`\`\` cell delimiter
 vim.g.molten_virt_lines_off_by_1 = true
+
+-- NOTE:nvim name.ipynb to create a new ipynb will not render ipynb properly via Jupytext.
+-- Provide a command to create a blank new Python notebook
+-- note: the metadata is needed for Jupytext to understand how to parse the notebook.
+-- if you use another language than Python, you should change it in the template.
+local default_notebook = [[
+  {
+    "cells": [
+     {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ""
+      ]
+     }
+    ],
+    "metadata": {
+     "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+     },
+     "language_info": {
+      "codemirror_mode": {
+        "name": "ipython"
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3"
+     }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 5
+  }
+]]
+
+local function new_notebook(filename)
+  local path = filename .. '.ipynb'
+  local file = io.open(path, 'w')
+  if file then
+    file:write(default_notebook)
+    file:close()
+    vim.cmd('edit ' .. path)
+  else
+    print 'Error: Could not open new notebook file for writing.'
+  end
+end
+
+vim.api.nvim_create_user_command('NewNotebook', function(opts)
+  new_notebook(opts.args)
+end, {
+  nargs = 1,
+  complete = 'file',
+})
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -263,26 +316,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.hl.on_yank()
   end,
 })
-
-vim.g.python3_host_prog = vim.fn.expand '~/.virtualenvs/nvim/bin/python3'
-
--- I find auto open annoying, keep in mind setting this option will require setting
--- a keybind for `:noautocmd MoltenEnterOutput` to open the output again
-vim.g.molten_auto_open_output = false
-
--- this guide will be using image.nvim
--- Don't forget to setup and install the plugin if you want to view image outputs
-vim.g.molten_image_provider = 'image.nvim'
-
--- optional, I like wrapping. works for virt text and the output window
-vim.g.molten_wrap_output = true
-
--- Output as virtual text. Allows outputs to always be shown, works with images, but can
--- be buggy with longer images
-vim.g.molten_virt_text_output = true
-
--- this will make it so the output shows up below the \`\`\` cell delimiter
-vim.g.molten_virt_lines_off_by_1 = true
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
