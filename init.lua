@@ -1,3 +1,5 @@
+-- NOTE: need to have a python virtual enviroment at ~/.virtualenvs/nvim
+
 --[[
 
 =====================================================================
@@ -224,6 +226,7 @@ vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>', { desc = 're
 
 vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
 
+vim.keymap.set('n', '<localleader>mrl', ':MoltenRestart<CR>', { desc = '[M]olten: [R]e[L]oad the kernel.' })
 vim.keymap.set('n', '<localleader>mn', ':MoltenNext<CR>', { desc = 'jump to next cell', silent = true })
 vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to previous cell', silent = true })
 vim.keymap.set('n', '<localleader>mow', ':noautocmd MoltenEnterOutput<CR>', { desc = '[Molten]: [O]pen output [W]indow', silent = true })
@@ -237,9 +240,10 @@ vim.keymap.set('n', '<localleader>mob', ':MoltenOpenInBrowser<CR>', { desc = '[M
 -- set ctrl+b to create a python cell below current cell.
 -- NOTE: MoltenSave and MoltenLoad requires path, which is inconvenient to call via keymaps. We define new functions below to save/load in same directory. The following two keymaps are outdate and hence commented.
 --
--- vim.keymap.set('n', '<localleader>ms', ':MoltenSave<CR>', { desc = '[M]olten: [S]ave the current cells and evaluated outputs into a JSON file. ' })
+-- the following two keymaps do not have <CR> because we want to enter path before execution.
+-- vim.keymap.set('n', '<localleader>ms', ':MoltenSave', { desc = '[M]olten: [S]ave the current cells and evaluated outputs into a JSON file. ' })
 -- Save the current cells and evaluated outputs into a JSON file. When path is specified, save the file to path, otherwise save to g:molten_save_path. currently only saves one kernel per file
--- vim.keymap.set('n', '<localleader>ml', ':MoltenLoad<CR>', { desc = '[M]olten: [L]oad the cell locations and outputs from a JSON file.' })
+-- vim.keymap.set('n', '<localleader>ml', ':MoltenLoad', { desc = '[M]olten: [L]oad the cell locations and outputs from a JSON file.' })
 vim.api.nvim_create_user_command('MoltenSaveHere', function()
   local file = vim.fn.expand '%:p'
   if file == '' then
