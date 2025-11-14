@@ -224,21 +224,59 @@ vim.keymap.set('n', '<localleader>rr', ':MoltenReevaluateCell<CR>', { desc = 're
 
 vim.keymap.set('n', '<localleader>e', ':MoltenEvaluateOperator<CR>', { desc = 'evaluate operator', silent = true })
 
+vim.keymap.set('n', '<localleader>mn', ':MoltenNext<CR>', { desc = 'jump to next cell', silent = true })
+vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to previous cell', silent = true })
 vim.keymap.set('n', '<localleader>mow', ':noautocmd MoltenEnterOutput<CR>', { desc = '[Molten]: [O]pen output [W]indow', silent = true })
 vim.keymap.set('n', '<localleader>mcw', ':MoltenHideOutput<CR>', { desc = '[M]olten:[C]lose output [W]indow', silent = true })
 vim.keymap.set('n', '<localleader>moi', ':MoltenImagePopup<CR>', { desc = '[M]olten: [O]pen output [I]mage via defualt image viewer' })
-vim.keymap.set('n', '<localleader>ms', ':MoltenSave<CR>', { desc = '[M]olten: [S]ave the current cells and evaluated outputs into a JSON file. ' })
--- Save the current cells and evaluated outputs into a JSON file. When path is specified, save the file to path, otherwise save to g:molten_save_path. currently only saves one kernel per file
-vim.keymap.set('n', '<localleader>ml', ':MoltenLoad<CR>', { desc = '[M]olten: [L]oad the cell locations and outputs from a JSON file.' })
+-- only for html/txt output, it can open a browser.
+vim.keymap.set('n', '<localleader>mob', ':MoltenOpenInBrowser<CR>', { desc = '[M]olten: [O]pen output in [B]rowser', silent = true })
 -- NOTE:There are keymaps in ~/.config/nvim/lua/custom/plugins/quarto.lua. In particular, the following md is repeated in quarto.lua, and hence commented.
 --
 -- vim.keymap.set('n', '<localleader>md', ':MoltenDelete<CR>', { desc = 'delete Molten cell', silent = true })
-
--- if you work with html outputs:
-vim.keymap.set('n', '<localleader>mx', ':MoltenOpenInBrowser<CR>', { desc = 'open output in browser', silent = true })
-vim.keymap.set('n', '<localleader>mn', ':MoltenNext<CR>', { desc = 'jump to next cell', silent = true })
-vim.keymap.set('n', '<localleader>mp', ':MoltenPrev<CR>', { desc = 'jump to previous cell', silent = true })
 -- set ctrl+b to create a python cell below current cell.
+-- NOTE: MoltenSave and MoltenLoad requires path, which is inconvenient to call via keymaps. We define new functions below to save/load in same directory. The following two keymaps are outdate and hence commented.
+--
+-- vim.keymap.set('n', '<localleader>ms', ':MoltenSave<CR>', { desc = '[M]olten: [S]ave the current cells and evaluated outputs into a JSON file. ' })
+-- Save the current cells and evaluated outputs into a JSON file. When path is specified, save the file to path, otherwise save to g:molten_save_path. currently only saves one kernel per file
+-- vim.keymap.set('n', '<localleader>ml', ':MoltenLoad<CR>', { desc = '[M]olten: [L]oad the cell locations and outputs from a JSON file.' })
+vim.api.nvim_create_user_command('MoltenSaveHere', function()
+  local file = vim.fn.expand '%:p'
+  if file == '' then
+    print 'No file associated with this buffer.'
+    return
+  end
+  local dir = vim.fn.fnamemodify(file, ':h')
+  local base = vim.fn.expand '%:t:r'
+  local out = dir .. '/' .. base .. '_molten.json'
+  vim.cmd('MoltenSave ' .. vim.fn.fnameescape(out))
+  print('Saved Molten outputs to: ' .. out)
+end, {})
+vim.keymap.set('n', '<localleader>ms', '<cmd>MoltenSaveHere<CR>', {
+  desc = 'Molten: Save outputs next to file',
+  silent = true,
+})
+vim.api.nvim_create_user_command('MoltenLoadHere', function()
+  local file = vim.fn.expand '%:p'
+  if file == '' then
+    print 'No file associated with this buffer.'
+    return
+  end
+  local dir = vim.fn.fnamemodify(file, ':h')
+  local base = vim.fn.expand '%:t:r'
+  local path = dir .. '/' .. base .. '_molten.json'
+  if vim.fn.filereadable(path) == 0 then
+    print('No molten JSON found at: ' .. path)
+    return
+  end
+  vim.cmd('MoltenLoad ' .. vim.fn.fnameescape(path))
+  print('Loaded Molten outputs from: ' .. path)
+end, {})
+vim.keymap.set('n', '<localleader>ml', '<cmd>MoltenLoadHere<CR>', {
+  desc = 'Molten: Load outputs next to file',
+  silent = true,
+})
+
 -- TODO: in tmux, ctrl+b is binded to command. So in tmux, need to type ctrl+b, ctrl+b to work. Moreover, this only works when cursor is at the bottom of current cell. Maybe fix it later.
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'quarto', 'markdown', 'python' },
