@@ -95,6 +95,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
+vim.g.vimtex_view_method = 'zathura'
 vim.g.have_nerd_font = false
 
 -- [[ Setting options ]]
@@ -208,6 +209,9 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+
+-- NOTE: LATEX setups
+vim.keymap.set('n', '<leader>tv', ':Vista!!<CR>')
 
 -- NOTE: molten ipykernel setups:
 -- WARN: Make sure the virtual enviroment is created in the folder, and source.virtualenvs, and make sure pip install ipykernel, and register it python -m ipykernel install --user --name VENV_NAME
